@@ -72,4 +72,24 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
+
+});
+
+app.delete('/incidentes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query(
+            'DELETE FROM incidentes WHERE id = $1',
+            [id]
+        );
+        res.json({
+            success: true,
+            message: 'Reporte eliminado',
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            error: 'Error eliminando reporte',
+        });
+    }
 });

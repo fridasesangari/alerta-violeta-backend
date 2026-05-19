@@ -24,7 +24,7 @@ class _MapScreenState extends State<MapScreen> {
     loadReports();
   }
 
-  //COLOR SEGÚN CATEGORÍA
+  // 🔥 COLOR SEGÚN CATEGORÍA
   Color getColor(String categoria) {
     switch (categoria) {
       case "Robo":
@@ -47,17 +47,17 @@ class _MapScreenState extends State<MapScreen> {
   //CARGAR REPORTES
   Future<void> loadReports() async {
     try {
-      final data = await ApiService.getReports();
+      // 🔥 AQUI ESTABA EL ERROR
+      final data = await ApiService.obtenerIncidentes();
 
       List<Marker> tempMarkers = [];
       List<WeightedLatLng> tempHeatPoints = [];
 
       for (var r in data) {
-        final lat = double.parse(r["lat"].toString());
-        final lng = double.parse(r["lng"].toString());
+        final lat = double.parse(r["latitud"].toString());
+        final lng = double.parse(r["longitud"].toString());
 
-        final categoria = r["categoria"] ?? "Acoso";
-
+        final categoria = r["titulo"] ?? "Acoso";
         // 🔥 HEATMAP
         tempHeatPoints.add(WeightedLatLng(LatLng(lat, lng), 1));
 
@@ -65,7 +65,6 @@ class _MapScreenState extends State<MapScreen> {
         tempMarkers.add(
           Marker(
             point: LatLng(lat, lng),
-
             width: 40,
             height: 40,
 
@@ -73,7 +72,6 @@ class _MapScreenState extends State<MapScreen> {
               onTap: () {
                 showModalBottomSheet(
                   context: context,
-
                   backgroundColor: Colors.transparent,
 
                   builder: (_) {
@@ -82,7 +80,6 @@ class _MapScreenState extends State<MapScreen> {
 
                       decoration: const BoxDecoration(
                         color: Colors.white,
-
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(30),
                         ),
@@ -90,7 +87,6 @@ class _MapScreenState extends State<MapScreen> {
 
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-
                         crossAxisAlignment: CrossAxisAlignment.start,
 
                         children: [
@@ -107,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
 
                           Text("📍 $lat, $lng"),
 
-                          Text("📅 ${r["fecha"]}"),
+                          Text("📅 ${r["created_at"]}"),
 
                           const SizedBox(height: 20),
 
@@ -119,7 +115,6 @@ class _MapScreenState extends State<MapScreen> {
                                 base64Decode(r["foto"]),
 
                                 height: 220,
-
                                 width: double.infinity,
 
                                 fit: BoxFit.cover,
@@ -134,9 +129,7 @@ class _MapScreenState extends State<MapScreen> {
 
               child: Icon(
                 Icons.location_on,
-
                 color: getColor(categoria),
-
                 size: 40,
               ),
             ),
@@ -162,12 +155,11 @@ class _MapScreenState extends State<MapScreen> {
       body: FlutterMap(
         options: MapOptions(
           initialCenter: LatLng(19.2433, -103.7250),
-
           initialZoom: 13,
         ),
 
         children: [
-          //MAPA
+          // MAPA
           TileLayer(
             urlTemplate:
                 "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
@@ -175,21 +167,19 @@ class _MapScreenState extends State<MapScreen> {
             subdomains: ['a', 'b', 'c'],
           ),
 
-          //HEATMAP
+          // HEATMAP
           if (heatPoints.isNotEmpty)
             HeatMapLayer(
               heatMapDataSource: InMemoryHeatMapDataSource(data: heatPoints),
 
               heatMapOptions: HeatMapOptions(
                 radius: 35,
-
                 blurFactor: 0.7,
-
                 minOpacity: 0.3,
               ),
             ),
 
-          //MARKERS
+          // MARKERS
           MarkerLayer(markers: markers),
         ],
       ),

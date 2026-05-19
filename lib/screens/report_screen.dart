@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -86,45 +84,35 @@ class _ReportScreenState extends State<ReportScreen> {
         "Esperando ubicación GPS...",
         backgroundColor: Colors.orange,
       );
+
       return;
     }
 
     if (!mounted) return;
+
     setState(() => isSending = true);
 
     try {
-      final url = Uri.parse("http://192.168.1.5:3000/api/report");
-      String? base64Image;
-
-      if (image != null) {
-        final bytes = await image!.readAsBytes();
-        base64Image = base64Encode(bytes);
-      }
-
-      final response = await ApiService.sendReport({
-        "lat": position!.latitude,
-        "lng": position!.longitude,
-        "fecha": DateTime.now().toString(),
-        "foto": base64Image,
-        "categoria": categoria,
-        "descripcion": _descController.text,
-      });
+      await ApiService.crearIncidente(
+        titulo: categoria,
+        descripcion: _descController.text,
+        latitud: position!.latitude,
+        longitud: position!.longitude,
+      );
 
       if (!mounted) return;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        _showCustomSnackBar(
-          "Reporte enviado correctamente",
-          backgroundColor: Colors.green,
-        );
-        Navigator.pop(context);
-      } else {
-        throw Exception("Error del servidor");
-      }
+      _showCustomSnackBar(
+        "Reporte enviado correctamente 🚀",
+        backgroundColor: Colors.green,
+      );
+
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
+
       _showCustomSnackBar(
-        "Error al enviar el reporte",
+        "Error al enviar reporte",
         backgroundColor: Colors.red,
       );
     } finally {
