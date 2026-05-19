@@ -92,4 +92,27 @@ app.delete('/incidentes/:id', async (req, res) => {
             error: 'Error eliminando reporte',
         });
     }
+
+});
+
+app.put('/incidentes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estado } = req.body;
+        const result = await pool.query(
+            `
+            UPDATE incidentes
+            SET estado = $1
+            WHERE id = $2
+            RETURNING *
+            `,
+            [estado, id]
+        );
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            error: 'Error actualizando estado',
+        });
+    }
 });

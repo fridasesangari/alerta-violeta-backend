@@ -11,6 +11,26 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+Widget detailRow(String title, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.purple,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(value),
+      ],
+    ),
+  );
+}
+
 class _DashboardScreenState extends State<DashboardScreen> {
   List reports = [];
   List<WeightedLatLng> heatPoints = [];
@@ -357,6 +377,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   title: Text(report['titulo'] ?? ''),
 
                                   subtitle: Text(report['descripcion'] ?? ''),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          title: Text(report['titulo'] ?? ''),
+                                          content: SizedBox(
+                                            width: 400,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                detailRow(
+                                                  "Descripción",
+                                                  report['descripcion'] ?? '',
+                                                ),
+                                                detailRow(
+                                                  "Categoría",
+                                                  report['categoria'] ?? '',
+                                                ),
+                                                detailRow(
+                                                  "Estado",
+                                                  report['estado'] ??
+                                                      'Pendiente',
+                                                ),
+                                                detailRow(
+                                                  "Latitud",
+                                                  report['latitud'].toString(),
+                                                ),
+                                                detailRow(
+                                                  "Longitud",
+                                                  report['longitud'].toString(),
+                                                ),
+                                                detailRow(
+                                                  "Fecha",
+                                                  report['created_at']
+                                                      .toString(),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          actions: [
+                                            ElevatedButton.icon(
+                                              icon: const Icon(Icons.close),
+                                              label: const Text("Cerrar"),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () async {
+                                          await ApiService.deleteReport(
+                                            int.parse(report['id'].toString()),
+                                          );
+                                          loadReports();
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
