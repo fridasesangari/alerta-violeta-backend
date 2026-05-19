@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_map_heatmap/flutter_map_heatmap.dart';
+import 'login_screen.dart';
 
 import '../services/api_service.dart';
 
@@ -11,547 +12,597 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-Widget detailRow(String title, String value) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.purple,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(value),
-      ],
-    ),
-  );
-}
-
 class _DashboardScreenState extends State<DashboardScreen> {
   List reports = [];
-  List<WeightedLatLng> heatPoints = [];
+
+  int selectedIndex = 0;
 
   int acoso = 0;
   int robo = 0;
   int violencia = 0;
 
-  bool loading = true;
-
-  String filtro = 'Todas';
-
   @override
   void initState() {
     super.initState();
+
     loadReports();
-    // RECARGA AUTOMÁTICA
-    Future.delayed(const Duration(seconds: 10), refreshLoop);
   }
 
   Future<void> loadReports() async {
     final data = await ApiService.getReports();
 
+    int acosoCount = 0;
+    int roboCount = 0;
+    int violenciaCount = 0;
+
+    for (var report in data) {
+      final categoria = report['categoria'].toString().toLowerCase();
+
+      if (categoria == 'acoso') {
+        acosoCount++;
+      }
+
+      if (categoria == 'robo') {
+        roboCount++;
+      }
+
+      if (categoria == 'violencia') {
+        violenciaCount++;
+      }
+    }
+
     setState(() {
       reports = data;
 
-      heatPoints = reports.map((report) {
-        return WeightedLatLng(
-          LatLng(
-            double.parse(report['latitud'].toString()),
-            double.parse(report['longitud'].toString()),
-          ),
-          1,
-        );
-      }).toList();
+      acoso = acosoCount;
 
-      acoso = reports.where((r) => r['categoria'] == 'Acoso').length;
-      robo = reports.where((r) => r['categoria'] == 'Robo').length;
-      violencia = reports.where((r) => r['categoria'] == 'Violencia').length;
-      loading = false;
+      robo = roboCount;
+
+      violencia = violenciaCount;
     });
-  }
-
-  void refreshLoop() async {
-    while (mounted) {
-      await loadReports();
-      await Future.delayed(const Duration(seconds: 10));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    List filteredReports = filtro == 'Todas'
-        ? reports
-        : reports.where((r) => r['categoria'] == filtro).toList();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F3FF),
 
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF6D28D9)),
+      body: Row(
+        children: [
+          buildSidebar(),
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: IndexedStack(
+              index: selectedIndex,
 
-                mainAxisAlignment: MainAxisAlignment.end,
+              children: [dashboardContent(), mapContent(), statisticsContent()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                children: const [
-                  Icon(Icons.shield, color: Colors.white, size: 50),
+  Widget buildSidebar() {
+    return Container(
+      width: 220,
 
-                  SizedBox(height: 10),
+      color: Colors.white,
 
-                  Text(
-                    "Alerta Violeta",
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
 
-                    style: TextStyle(
-                      color: Colors.white,
+            padding: const EdgeInsets.all(25),
 
-                      fontSize: 24,
+            color: Colors.purple,
 
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: const Column(
+              children: [
+                Icon(Icons.shield, color: Colors.white, size: 50),
+
+                SizedBox(height: 10),
+
+                Text(
+                  "Alerta Violeta",
+
+                  style: TextStyle(
+                    color: Colors.white,
+
+                    fontSize: 22,
+
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
+          ),
+
+          sidebarItem(Icons.dashboard, "Dashboard", 0),
+
+          sidebarItem(Icons.map, "Mapa", 1),
+
+          sidebarItem(Icons.bar_chart, "Estadísticas", 2),
+
+          const Spacer(),
+
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+
+            title: const Text(
+              "Cerrar sesión",
+
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
 
-            ListTile(
-              leading: const Icon(Icons.dashboard),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
 
-              title: const Text("Dashboard"),
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            },
+          ),
 
-              onTap: () {},
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget sidebarItem(IconData icon, String title, int index) {
+    final selected = selectedIndex == index;
+
+    return ListTile(
+      leading: Icon(icon, color: selected ? Colors.purple : Colors.grey),
+
+      title: Text(
+        title,
+
+        style: TextStyle(color: selected ? Colors.purple : Colors.black),
+      ),
+
+      onTap: () {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+    );
+  }
+
+  Widget dashboardContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          Text(
+            "Total reportes: ${reports.length}",
+
+            style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              statCard("Total", reports.length.toString(), Icons.warning),
+
+              const SizedBox(width: 20),
+
+              statCard("Acoso", acoso.toString(), Icons.person),
+
+              const SizedBox(width: 20),
+
+              statCard("Robos", robo.toString(), Icons.gpp_bad),
+
+              const SizedBox(width: 20),
+
+              statCard("Violencia", violencia.toString(), Icons.gavel),
+            ],
+          ),
+
+          const SizedBox(height: 30),
+
+          buildChart(),
+
+          const SizedBox(height: 30),
+
+          SizedBox(height: 500, child: buildMap()),
+
+          const SizedBox(height: 30),
+
+          buildReportsList(),
+        ],
+      ),
+    );
+  }
+
+  Widget statisticsContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+
+      child: Column(
+        children: [
+          Row(
+            children: [
+              statCard("Acoso", acoso.toString(), Icons.person),
+
+              const SizedBox(width: 20),
+
+              statCard("Robos", robo.toString(), Icons.gpp_bad),
+
+              const SizedBox(width: 20),
+
+              statCard("Violencia", violencia.toString(), Icons.gavel),
+            ],
+          ),
+
+          const SizedBox(height: 30),
+
+          buildChart(),
+
+          const SizedBox(height: 30),
+
+          buildPieChart(),
+        ],
+      ),
+    );
+  }
+
+  Widget mapContent() {
+    return Padding(padding: const EdgeInsets.all(20), child: buildMap());
+  }
+
+  Widget buildChart() {
+    return Container(
+      height: 300,
+
+      padding: const EdgeInsets.all(20),
+
+      decoration: BoxDecoration(
+        color: Colors.white,
+
+        borderRadius: BorderRadius.circular(20),
+
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+      ),
+
+      child: BarChart(
+        BarChartData(
+          barGroups: [
+            BarChartGroupData(
+              x: 0,
+
+              barRods: [
+                BarChartRodData(toY: acoso.toDouble(), color: Colors.purple),
+              ],
             ),
 
-            ListTile(
-              leading: const Icon(Icons.map),
+            BarChartGroupData(
+              x: 1,
 
-              title: const Text("Mapa"),
-
-              onTap: () {},
+              barRods: [
+                BarChartRodData(toY: robo.toDouble(), color: Colors.red),
+              ],
             ),
 
-            ListTile(
-              leading: const Icon(Icons.bar_chart),
+            BarChartGroupData(
+              x: 2,
 
-              title: const Text("Estadísticas"),
-
-              onTap: () {},
+              barRods: [
+                BarChartRodData(
+                  toY: violencia.toDouble(),
+                  color: Colors.orange,
+                ),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
 
-      appBar: AppBar(
-        title: const Text("Dashboard Alerta Violeta"),
+  Widget buildPieChart() {
+    return Container(
+      height: 500,
 
-        backgroundColor: const Color(0xFF6D28D9),
+      padding: const EdgeInsets.all(20),
+
+      decoration: BoxDecoration(
+        color: Colors.white,
+
+        borderRadius: BorderRadius.circular(20),
+
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
 
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const Text(
+            "Distribución de incidentes",
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
 
-                children: [
-                  Text(
-                    "Total reportes: ${reports.length}",
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+          const SizedBox(height: 30),
 
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        "Conectado en tiempo real",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
 
-                  const SizedBox(height: 20),
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 3,
 
-                  // FILTRO
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                      centerSpaceRadius: 70,
 
-                    decoration: BoxDecoration(
-                      color: Colors.white,
+                      sections: [
+                        PieChartSectionData(
+                          value: acoso.toDouble(),
 
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                          title: '$acoso',
 
-                    child: DropdownButton<String>(
-                      value: filtro,
+                          radius: 100,
 
-                      underline: const SizedBox(),
-
-                      items: ['Todas', 'Acoso', 'Robo', 'Violencia'].map((
-                        categoria,
-                      ) {
-                        return DropdownMenuItem(
-                          value: categoria,
-
-                          child: Text(categoria),
-                        );
-                      }).toList(),
-
-                      onChanged: (value) {
-                        setState(() {
-                          filtro = value!;
-                        });
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // CARDS
-                  Row(
-                    children: [
-                      statCard(
-                        "Total",
-                        reports.length.toString(),
-                        Icons.warning,
-                      ),
-
-                      const SizedBox(width: 15),
-
-                      statCard("Acoso", acoso.toString(), Icons.person),
-
-                      const SizedBox(width: 15),
-
-                      statCard("Robos", robo.toString(), Icons.dangerous),
-
-                      const SizedBox(width: 15),
-
-                      statCard("Violencia", violencia.toString(), Icons.gavel),
-                    ],
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // GRAFICA
-                  SizedBox(
-                    height: 350,
-
-                    child: Card(
-                      elevation: 5,
-
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-
-                        child: BarChart(
-                          BarChartData(
-                            alignment: BarChartAlignment.spaceAround,
-
-                            maxY: 10,
-
-                            barTouchData: BarTouchData(enabled: true),
-
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: true),
-                              ),
-
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-
-                                  getTitlesWidget: (value, meta) {
-                                    switch (value.toInt()) {
-                                      case 0:
-                                        return const Text("Acoso");
-
-                                      case 1:
-                                        return const Text("Robos");
-
-                                      case 2:
-                                        return const Text("Violencia");
-                                    }
-
-                                    return const Text('');
-                                  },
-                                ),
-                              ),
-                            ),
-
-                            borderData: FlBorderData(show: false),
-
-                            barGroups: [
-                              BarChartGroupData(
-                                x: 0,
-
-                                barRods: [
-                                  BarChartRodData(
-                                    toY: acoso.toDouble(),
-
-                                    color: Colors.purple,
-                                  ),
-                                ],
-                              ),
-
-                              BarChartGroupData(
-                                x: 1,
-
-                                barRods: [
-                                  BarChartRodData(
-                                    toY: robo.toDouble(),
-
-                                    color: Colors.red,
-                                  ),
-                                ],
-                              ),
-
-                              BarChartGroupData(
-                                x: 2,
-
-                                barRods: [
-                                  BarChartRodData(
-                                    toY: violencia.toDouble(),
-
-                                    color: Colors.orange,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // MAPA + LISTA
-                  SizedBox(
-                    height: 600,
-
-                    child: Row(
-                      children: [
-                        // LISTA
-                        Expanded(
-                          flex: 1,
-
-                          child: ListView.builder(
-                            itemCount: filteredReports.length,
-
-                            itemBuilder: (context, index) {
-                              final report = filteredReports[index];
-
-                              return Card(
-                                child: ListTile(
-                                  leading: const Icon(
-                                    Icons.warning,
-                                    color: Colors.purple,
-                                  ),
-
-                                  title: Text(report['titulo'] ?? ''),
-
-                                  subtitle: Text(report['descripcion'] ?? ''),
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                          title: Text(report['titulo'] ?? ''),
-                                          content: SizedBox(
-                                            width: 400,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                detailRow(
-                                                  "Descripción",
-                                                  report['descripcion'] ?? '',
-                                                ),
-                                                detailRow(
-                                                  "Categoría",
-                                                  report['categoria'] ?? '',
-                                                ),
-                                                detailRow(
-                                                  "Estado",
-                                                  report['estado'] ??
-                                                      'Pendiente',
-                                                ),
-                                                detailRow(
-                                                  "Latitud",
-                                                  report['latitud'].toString(),
-                                                ),
-                                                detailRow(
-                                                  "Longitud",
-                                                  report['longitud'].toString(),
-                                                ),
-                                                detailRow(
-                                                  "Fecha",
-                                                  report['created_at']
-                                                      .toString(),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          actions: [
-                                            ElevatedButton.icon(
-                                              icon: const Icon(Icons.close),
-                                              label: const Text("Cerrar"),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () async {
-                                          await ApiService.deleteReport(
-                                            int.parse(report['id'].toString()),
-                                          );
-                                          loadReports();
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                          color: Colors.purple,
                         ),
 
-                        const SizedBox(width: 20),
+                        PieChartSectionData(
+                          value: robo.toDouble(),
 
-                        // MAPA
-                        Expanded(
-                          flex: 2,
+                          title: '$robo',
 
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
+                          radius: 100,
 
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
+                          color: Colors.red,
+                        ),
 
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
+                        PieChartSectionData(
+                          value: violencia.toDouble(),
 
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
+                          title: '$violencia',
 
-                              child: FlutterMap(
-                                options: MapOptions(
-                                  initialCenter: LatLng(19.2433, -103.7241),
+                          radius: 100,
 
-                                  initialZoom: 13,
-                                ),
-
-                                children: [
-                                  TileLayer(
-                                    urlTemplate:
-                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-
-                                    userAgentPackageName:
-                                        'com.example.alertavioleta',
-                                  ),
-
-                                  HeatMapLayer(
-                                    heatMapDataSource:
-                                        InMemoryHeatMapDataSource(
-                                          data: heatPoints,
-                                        ),
-                                    heatMapOptions: HeatMapOptions(
-                                      radius: 35,
-                                      blurFactor: 0.7,
-                                      minOpacity: 0.3,
-                                    ),
-                                  ),
-                                  MarkerLayer(
-                                    markers: [
-                                      for (var report in filteredReports)
-                                        Marker(
-                                          point: LatLng(
-                                            double.parse(
-                                              report['latitud'].toString(),
-                                            ),
-
-                                            double.parse(
-                                              report['longitud'].toString(),
-                                            ),
-                                          ),
-
-                                          width: 80,
-                                          height: 80,
-
-                                          child: Tooltip(
-                                            message:
-                                                "${report['titulo']}\n${report['descripcion']}",
-
-                                            child: const Icon(
-                                              Icons.location_on,
-
-                                              color: Colors.red,
-
-                                              size: 40,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          color: Colors.orange,
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      legendItem(Colors.purple, "Acoso"),
+
+                      const SizedBox(height: 20),
+
+                      legendItem(Colors.red, "Robos"),
+
+                      const SizedBox(height: 20),
+
+                      legendItem(Colors.orange, "Violencia"),
+                    ],
+                  ),
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildMap() {
+    final heatPoints = reports
+        .where(
+          (report) => report['latitud'] != null && report['longitud'] != null,
+        )
+        .map((report) {
+          return WeightedLatLng(
+            LatLng(
+              double.parse(report['latitud'].toString()),
+
+              double.parse(report['longitud'].toString()),
+            ),
+
+            1,
+          );
+        })
+        .toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+      ),
+
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(19.2433, -103.7241),
+
+            initialZoom: 13,
+          ),
+
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+
+              userAgentPackageName: 'com.example.alertavioleta',
+            ),
+
+            // SOLO mostrar heatmap si hay puntos
+            if (heatPoints.isNotEmpty)
+              HeatMapLayer(
+                heatMapDataSource: InMemoryHeatMapDataSource(data: heatPoints),
+
+                heatMapOptions: HeatMapOptions(radius: 35),
+              ),
+
+            MarkerLayer(
+              markers: [
+                for (var report in reports)
+                  Marker(
+                    point: LatLng(
+                      double.parse(report['latitud'].toString()),
+
+                      double.parse(report['longitud'].toString()),
+                    ),
+
+                    width: 80,
+                    height: 80,
+
+                    child: const Icon(
+                      Icons.location_on,
+
+                      color: Colors.red,
+
+                      size: 40,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildReportsList() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+
+      decoration: BoxDecoration(
+        color: Colors.white,
+
+        borderRadius: BorderRadius.circular(20),
+
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+      ),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          const Text(
+            "Incidentes",
+
+            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 20),
+
+          ListView.builder(
+            shrinkWrap: true,
+
+            physics: const NeverScrollableScrollPhysics(),
+
+            itemCount: reports.length,
+
+            itemBuilder: (context, index) {
+              final report = reports[index];
+
+              return Card(
+                child: ListTile(
+                  leading: Icon(
+                    Icons.warning,
+
+                    color: report['estado'] == 'Atendido'
+                        ? Colors.green
+                        : Colors.purple,
+                  ),
+
+                  title: Text(report['titulo']),
+
+                  subtitle: Text(report['descripcion']),
+
+                  onTap: () {
+                    showDialog(
+                      context: context,
+
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text(report['titulo']),
+
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+
+                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                            children: [
+                              detailRow("Descripción", report['descripcion']),
+
+                              detailRow("Categoría", report['categoria']),
+
+                              detailRow(
+                                "Estado",
+                                report['estado'] ?? 'Pendiente',
+                              ),
+                            ],
+                          ),
+
+                          actions: [
+                            ElevatedButton(
+                              onPressed: () async {
+                                await ApiService.updateStatus(
+                                  int.parse(report['id'].toString()),
+
+                                  'Atendido',
+                                );
+
+                                Navigator.pop(context);
+
+                                loadReports();
+                              },
+
+                              child: const Text("Atendido"),
+                            ),
+
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+
+                              child: const Text("Cerrar"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+
+                    onPressed: () async {
+                      await ApiService.deleteReport(
+                        int.parse(report['id'].toString()),
+                      );
+
+                      loadReports();
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -586,6 +637,53 @@ Widget statCard(String title, String value, IconData icon) {
           Text(title),
         ],
       ),
+    ),
+  );
+}
+
+Widget legendItem(Color color, String text) {
+  return Row(
+    children: [
+      Container(
+        width: 20,
+        height: 20,
+
+        decoration: BoxDecoration(
+          color: color,
+
+          borderRadius: BorderRadius.circular(5),
+        ),
+      ),
+
+      const SizedBox(width: 10),
+
+      Text(text, style: const TextStyle(fontSize: 18)),
+    ],
+  );
+}
+
+Widget detailRow(String title, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
+      children: [
+        Text(
+          title,
+
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+
+            color: Colors.purple,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(value),
+      ],
     ),
   );
 }
