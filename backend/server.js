@@ -34,37 +34,58 @@ app.get("/incidentes", async (req, res) => {
 
 
 // CREAR INCIDENTE
-app.post("/incidentes", async (req, res) => {
+app.post('/incidentes', async (req, res) => {
 
-    try {
+  try {
 
-        const {
-            titulo,
-            descripcion,
-            latitud,
-            longitud
-        } = req.body;
+    const {
 
-        const result = await pool.query(
-            `
-            INSERT INTO incidentes
-            (titulo, descripcion, latitud, longitud)
-            VALUES ($1, $2, $3, $4)
-            RETURNING *
-            `,
-            [titulo, descripcion, latitud, longitud]
-        );
+      titulo,
+      descripcion,
+      categoria,
+      latitud,
+      longitud
 
-        res.json(result.rows[0]);
+    } = req.body;
 
-    } catch (error) {
+    console.log(req.body);
 
-        console.log(error);
+    const result = await pool.query(
 
-        res.status(500).json({
-            error: "Error creando incidente"
-        });
-    }
+      `INSERT INTO incidentes
+
+      (
+        titulo,
+        descripcion,
+        categoria,
+        latitud,
+        longitud
+      )
+
+      VALUES ($1, $2, $3, $4, $5)
+
+      RETURNING *`,
+
+      [
+        titulo,
+        descripcion,
+        categoria,
+        latitud,
+        longitud
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      error: 'Error al crear incidente'
+    });
+  }
 });
 
 
