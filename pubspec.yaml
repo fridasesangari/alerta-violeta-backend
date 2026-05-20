@@ -61,6 +61,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logo.png"
+  
 
 
   adaptive_icon_background: "#7C3AED"
@@ -78,6 +79,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
+    - assets/images/safecode_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

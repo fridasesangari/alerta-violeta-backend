@@ -30,6 +30,7 @@ class _ReportScreenState extends State<ReportScreen> {
   File? image;
   final picker = ImagePicker();
   String categoria = "Acoso";
+  String selectedCategory = 'acoso';
   bool isSending = false;
 
   // 🔥 NUEVO: Controlador para capturar el texto de la descripción
@@ -82,6 +83,7 @@ class _ReportScreenState extends State<ReportScreen> {
     if (position == null) {
       _showCustomSnackBar(
         "Esperando ubicación GPS...",
+
         backgroundColor: Colors.orange,
       );
 
@@ -95,15 +97,21 @@ class _ReportScreenState extends State<ReportScreen> {
     try {
       await ApiService.crearIncidente(
         titulo: categoria,
+
         descripcion: _descController.text,
+
+        categoria: categoria.toLowerCase(),
+
         latitud: position!.latitude,
+
         longitud: position!.longitude,
       );
 
       if (!mounted) return;
 
       _showCustomSnackBar(
-        "Reporte enviado correctamente 🚀",
+        "Reporte enviado correctamente",
+
         backgroundColor: Colors.green,
       );
 
@@ -113,6 +121,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
       _showCustomSnackBar(
         "Error al enviar reporte",
+
         backgroundColor: Colors.red,
       );
     } finally {

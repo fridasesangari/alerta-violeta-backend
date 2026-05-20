@@ -47,8 +47,7 @@ class _MapScreenState extends State<MapScreen> {
   //CARGAR REPORTES
   Future<void> loadReports() async {
     try {
-      // 🔥 AQUI ESTABA EL ERROR
-      final data = await ApiService.obtenerIncidentes();
+      final data = await ApiService.getReports();
 
       List<Marker> tempMarkers = [];
       List<WeightedLatLng> tempHeatPoints = [];

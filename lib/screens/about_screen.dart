@@ -17,70 +17,102 @@ class AboutScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
 
-            // LOGO
+            // =========================
+            // LOGO ALERTA VIOLETA
+            // =========================
             Container(
-              width: 140,
-              height: 140,
+              width: 150,
+              height: 150,
 
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(35),
+                borderRadius: BorderRadius.circular(40),
 
                 boxShadow: [
                   BoxShadow(
                     color: Colors.deepPurple.withOpacity(0.25),
+
                     blurRadius: 25,
                     spreadRadius: 5,
+
                     offset: const Offset(0, 10),
                   ),
                 ],
               ),
 
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(35),
+                borderRadius: BorderRadius.circular(40),
 
-                child: Image.asset("assets/logo.png", fit: BoxFit.cover),
+                child: Image.asset("assets/images/logo.png", fit: BoxFit.cover),
               ),
             ),
 
             const SizedBox(height: 30),
 
-            // NOMBRE APP
+            // =========================
+            // TITULO
+            // =========================
             const Text(
               "Alerta Violeta",
+
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 34,
                 fontWeight: FontWeight.bold,
+
                 color: Color(0xFF5B21B6),
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
             const Text(
-              "Plataforma inteligente de seguridad ciudadana",
+              "Sistema inteligente de seguridad ciudadana enfocado en la prevención, monitoreo y visualización de incidentes en tiempo real.",
+
               textAlign: TextAlign.center,
 
               style: TextStyle(
                 fontSize: 16,
+
                 color: Colors.black54,
-                height: 1.5,
+
+                height: 1.6,
               ),
             ),
 
             const SizedBox(height: 35),
 
-            // SAFE CODE STUDIO
+            // =========================
+            // OBJETIVO
+            // =========================
+            buildCard(
+              title: "Objetivo",
+
+              icon: Icons.security_rounded,
+
+              content:
+                  "Alerta Violeta busca brindar una herramienta tecnológica accesible que permita reportar incidentes, visualizar zonas de riesgo y generar estadísticas para fortalecer la seguridad ciudadana y la prevención.",
+            ),
+
+            const SizedBox(height: 25),
+
+            // =========================
+            // SAFE CODE
+            // =========================
             Container(
-              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+
+              padding: const EdgeInsets.all(24),
 
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
+
+                borderRadius: BorderRadius.circular(28),
 
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
+
                     blurRadius: 15,
+
                     offset: const Offset(0, 6),
                   ),
                 ],
@@ -88,28 +120,53 @@ class AboutScreen extends StatelessWidget {
 
               child: Column(
                 children: [
-                  const Icon(
-                    Icons.code_rounded,
-                    size: 50,
-                    color: Color(0xFF7C3AED),
+                  // LOGO SAFE CODE
+                  Container(
+                    width: 110,
+                    height: 110,
+
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.deepPurple.withOpacity(0.15),
+
+                          blurRadius: 18,
+                        ),
+                      ],
+                    ),
+
+                    child: ClipRRect(
+                      //borderRadius: BorderRadius.circular(28),
+                      child: Image.asset(
+                        "assets/images/safecode_logo.png",
+
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
 
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 20),
 
                   const Text(
                     "SafeCode Studio",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
                   const Text(
-                    "Desarrollo tecnológico enfocado en soluciones innovadoras con impacto social y enfoque en seguridad ciudadana.",
+                    "SafeCode Studio es un equipo enfocado en el desarrollo de soluciones tecnológicas modernas, seguras e innovadoras, orientadas al impacto social, la seguridad digital y la transformación tecnológica.",
+
                     textAlign: TextAlign.center,
 
                     style: TextStyle(
                       fontSize: 15,
+
                       color: Colors.black54,
+
                       height: 1.6,
                     ),
                   ),
@@ -117,120 +174,16 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 35),
-
-            // INTEGRANTES
-            Container(
-              width: double.infinity,
-
-              padding: const EdgeInsets.all(22),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.groups_rounded, color: Color(0xFF7C3AED)),
-
-                      SizedBox(width: 10),
-
-                      Text(
-                        "Equipo de Desarrollo",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  buildMember("Frida", "Ingeniería Informática"),
-
-                  buildMember("Amanda", "Ingeniería en Sistemas"),
-
-                  buildMember("Mariana", "Ingeniería en Sistemas"),
-
-                  buildMember("Emiliano", "Ingeniería Informática"),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 35),
-
-            // TECNOLOGÍAS
-            Container(
-              width: double.infinity,
-
-              padding: const EdgeInsets.all(22),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.memory_rounded, color: Color(0xFF7C3AED)),
-
-                      SizedBox(width: 10),
-
-                      Text(
-                        "Tecnologías",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  buildTech("Flutter"),
-                  buildTech("Node.js"),
-                  buildTech("MySQL"),
-                  buildTech("Firebase"),
-                  buildTech("Google Maps"),
-                  buildTech("HeatMaps"),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 40),
+            const SizedBox(height: 45),
 
             const Text(
               "© 2026 SafeCode Studio",
+
               style: TextStyle(
                 color: Colors.black45,
+
                 fontSize: 13,
+
                 letterSpacing: 1,
               ),
             ),
@@ -242,67 +195,69 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget buildMember(String name, String career) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+  Widget buildCard({
+    required String title,
 
-      child: Row(
-        children: [
-          Container(
-            width: 45,
-            height: 45,
+    required IconData icon,
 
-            decoration: const BoxDecoration(
-              color: Color(0xFFEEE7FF),
-              shape: BoxShape.circle,
-            ),
+    required String content,
+  }) {
+    return Container(
+      width: double.infinity,
 
-            child: const Icon(Icons.person, color: Color(0xFF7C3AED)),
-          ),
+      padding: const EdgeInsets.all(24),
 
-          const SizedBox(width: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
 
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        borderRadius: BorderRadius.circular(28),
 
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
 
-              Text(career, style: const TextStyle(color: Colors.black54)),
-            ],
+            blurRadius: 15,
+
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-    );
-  }
 
-  Widget buildTech(String tech) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
 
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFF7C3AED), size: 30),
 
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3EEFF),
-          borderRadius: BorderRadius.circular(15),
-        ),
+              const SizedBox(width: 12),
 
-        child: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Color(0xFF7C3AED)),
+              Text(
+                title,
 
-            const SizedBox(width: 12),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
 
-            Text(tech, style: const TextStyle(fontWeight: FontWeight.w600)),
-          ],
-        ),
+          const SizedBox(height: 18),
+
+          Text(
+            content,
+
+            style: const TextStyle(
+              fontSize: 15,
+
+              color: Colors.black54,
+
+              height: 1.7,
+            ),
+          ),
+        ],
       ),
     );
   }

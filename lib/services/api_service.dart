@@ -3,21 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static Future<void> updateStatus(int id, String estado) async {
-    final url = Uri.parse('$baseUrl/incidentes/$id');
-    await http.put(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'estado': estado}),
-    );
-  }
-
-  static Future<void> deleteReport(int id) async {
-    final url = Uri.parse('$baseUrl/incidentes/$id');
-    await http.delete(url);
-  }
-
   static const String baseUrl = "https://alerta-violeta-backend.onrender.com";
+
+  // =========================
+  // OBTENER REPORTES
+  // =========================
 
   static Future<List<dynamic>> getReports() async {
     final response = await http.get(Uri.parse("$baseUrl/incidentes"));
@@ -27,5 +17,71 @@ class ApiService {
     }
 
     return [];
+  }
+
+  // =========================
+  // CREAR INCIDENTE
+  // =========================
+
+  static Future<void> crearIncidente({
+    required String titulo,
+
+    required String descripcion,
+
+    required String categoria,
+
+    required double latitud,
+
+    required double longitud,
+  }) async {
+    final url = Uri.parse("$baseUrl/incidentes");
+
+    final response = await http.post(
+      url,
+
+      headers: {'Content-Type': 'application/json'},
+
+      body: jsonEncode({
+        'titulo': titulo,
+
+        'descripcion': descripcion,
+
+        'categoria': categoria,
+
+        'latitud': latitud,
+
+        'longitud': longitud,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Error al crear incidente');
+    }
+  }
+
+  // =========================
+  // ACTUALIZAR ESTADO
+  // =========================
+
+  static Future<void> updateStatus(int id, String estado) async {
+    final url = Uri.parse('$baseUrl/incidentes/$id');
+
+    await http.put(
+      url,
+
+      headers: {'Content-Type': 'application/json'},
+
+      body: jsonEncode({'estado': estado}),
+    );
+  }
+
+  // =========================
+  // ELIMINAR REPORTE
+  // =========================
+
+  static Future<void> deleteReport(int id) async {
+    final url = Uri.parse('$baseUrl/incidentes/$id');
+
+    await http.delete(url);
   }
 }
