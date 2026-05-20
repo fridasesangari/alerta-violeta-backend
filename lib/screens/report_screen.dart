@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:alertavioleta/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -19,8 +16,6 @@ class _ReportScreenState extends State<ReportScreen> {
   final TextEditingController _descController = TextEditingController();
 
   Position? position;
-
-  File? image;
 
   bool isSending = false;
 
@@ -80,23 +75,6 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // =========================
-  // TOMAR FOTO
-  // =========================
-
-  Future<void> pickImage() async {
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      imageQuality: 70,
-    );
-
-    if (picked != null) {
-      setState(() {
-        image = File(picked.path);
-      });
-    }
-  }
-
-  // =========================
   // ENVIAR REPORTE
   // =========================
 
@@ -123,17 +101,6 @@ class _ReportScreenState extends State<ReportScreen> {
       return;
     }
 
-    // VALIDAR FOTO
-
-    if (image == null) {
-      _showCustomSnackBar(
-        "Debes tomar una fotografía",
-        backgroundColor: Colors.red,
-      );
-
-      return;
-    }
-
     setState(() {
       isSending = true;
     });
@@ -149,8 +116,6 @@ class _ReportScreenState extends State<ReportScreen> {
         latitud: position!.latitude,
 
         longitud: position!.longitude,
-
-        imageFile: image!,
       );
 
       if (!mounted) return;
@@ -275,67 +240,6 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
 
                 contentPadding: const EdgeInsets.all(20),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // FOTO
-            GestureDetector(
-              onTap: pickImage,
-
-              child: Container(
-                width: double.infinity,
-
-                height: 220,
-
-                decoration: BoxDecoration(
-                  color: Colors.white,
-
-                  borderRadius: BorderRadius.circular(25),
-
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-
-                      blurRadius: 10,
-
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-
-                child: image == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-
-                        children: [
-                          Icon(
-                            Icons.camera_alt,
-                            size: 60,
-                            color: Colors.deepPurple,
-                          ),
-
-                          const SizedBox(height: 15),
-
-                          Text(
-                            "Tomar fotografía",
-
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-
-                              fontWeight: FontWeight.w600,
-
-                              color: Colors.deepPurple,
-                            ),
-                          ),
-                        ],
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(25),
-
-                        child: Image.file(image!, fit: BoxFit.cover),
-                      ),
               ),
             ),
 

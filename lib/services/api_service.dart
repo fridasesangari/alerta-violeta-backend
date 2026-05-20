@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,34 +32,7 @@ class ApiService {
     required String categoria,
     required double latitud,
     required double longitud,
-    required File imageFile,
   }) async {
-    // =========================
-    // SUBIR IMAGEN A SUPABASE
-    // (si falla, el reporte se envía igual sin imagen)
-    // =========================
-
-    String? imageUrl;
-
-    try {
-      final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
-
-      final imageBytes = await imageFile.readAsBytes();
-
-      await supabase.storage
-          .from("reportes")
-          .uploadBinary(fileName, imageBytes);
-
-      imageUrl =
-          supabase.storage.from("reportes").getPublicUrl(fileName);
-    } catch (_) {
-      // El reporte continúa aunque la imagen no se pueda subir
-    }
-
-    // =========================
-    // ENVIAR AL BACKEND
-    // =========================
-
     final url = Uri.parse("$baseUrl/incidentes");
 
     final response = await http.post(
@@ -72,7 +44,6 @@ class ApiService {
         'categoria': categoria,
         'latitud': latitud,
         'longitud': longitud,
-        'imagen': imageUrl,
       }),
     );
 
