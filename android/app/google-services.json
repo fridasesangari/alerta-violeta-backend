@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1092084696813",
+    "project_id": "alertavioleta-836b9",
+    "storage_bucket": "alertavioleta-836b9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092084696813:android:f50b4723746079fffaaee4",
+        "android_client_info": {
+          "package_name": "com.example.alertavioleta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChtjN3jOSZQbf86Jjd8BOIyicHt6sOJR4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
