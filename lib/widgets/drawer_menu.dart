@@ -4,6 +4,7 @@ import '../screens/map_screen.dart';
 import '../screens/guia_screen.dart'; // Asegúrate de crear este archivo
 import '../screens/sos_screen.dart';
 import '../screens/about_screen.dart';
+import '../screens/leyes_screen.dart';
 
 class DrawerMenu extends StatelessWidget {
   const DrawerMenu({super.key});
@@ -150,10 +151,10 @@ class DrawerMenu extends StatelessWidget {
                     label: "Artículos y Leyes",
                     onTap: () {
                       Navigator.pop(context);
-                      // Aquí podrías abrir la misma GuiaScreen en la sección de leyes
+
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const GuiaScreen()),
+                        MaterialPageRoute(builder: (_) => const LeyesScreen()),
                       );
                     },
                     color: Colors.blueGrey,
