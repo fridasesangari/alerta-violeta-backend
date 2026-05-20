@@ -1,11 +1,16 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'web_dashboard/login_screen.dart';
+import 'supabase_config.dart';
 
-void main() {
+import 'auth/login_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+
   runApp(const MyApp());
 }
 
@@ -17,7 +22,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      home: kIsWeb ? LoginScreen() : HomeScreen(),
+      title: 'Alerta Violeta',
+
+      theme: ThemeData(primarySwatch: Colors.deepPurple),
+
+      home: const LoginScreen(),
     );
   }
 }
