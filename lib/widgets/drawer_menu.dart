@@ -80,7 +80,10 @@ class DrawerMenu extends StatelessWidget {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ReportScreen()),
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ReportScreen(categoria: "Acoso"),
+                        ),
                       );
                     },
                     color: primaryPurple,

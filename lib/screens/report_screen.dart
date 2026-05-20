@@ -1,301 +1,383 @@
+import 'dart:io';
+
+import 'package:alertavioleta/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import '../services/api_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({super.key});
+  final String categoria;
+
+  const ReportScreen({super.key, required this.categoria});
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  // Método reutilizable para mostrar SnackBar personalizado
-  void _showCustomSnackBar(String message, {Color? backgroundColor}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      ),
-    );
-  }
-
-  Position? position;
-  File? image;
-  final picker = ImagePicker();
-  String categoria = "Acoso";
-  String selectedCategory = 'acoso';
-  bool isSending = false;
-
-  // 🔥 NUEVO: Controlador para capturar el texto de la descripción
   final TextEditingController _descController = TextEditingController();
 
-  final Color primaryPurple = const Color(0xFF7C3AED);
-  final Color lightBg = const Color(0xFFF5F3FF);
-  final Color darkText = const Color(0xFF2E1065);
+  Position? position;
+
+  File? image;
+
+  bool isSending = false;
 
   @override
   void initState() {
     super.initState();
+
     _getLocation();
   }
 
-  // 🔥 IMPORTANTE: Limpiar el controlador cuando se cierra la pantalla
-  @override
-  void dispose() {
-    _descController.dispose();
-    super.dispose();
-  }
+  // =========================
+  // OBTENER UBICACION
+  // =========================
 
   Future<void> _getLocation() async {
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
       return;
     }
-    Position pos = await Geolocator.getCurrentPosition();
-    if (!mounted) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    final currentPosition = await Geolocator.getCurrentPosition();
+
     setState(() {
-      position = pos;
+      position = currentPosition;
     });
   }
 
-  Future<void> _takePhoto() async {
-    final picked = await picker.pickImage(
+  // =========================
+  // TOMAR FOTO
+  // =========================
+
+  Future<void> pickImage() async {
+    final picked = await ImagePicker().pickImage(
       source: ImageSource.camera,
-      imageQuality: 30,
+      imageQuality: 70,
     );
+
     if (picked != null) {
-      if (!mounted) return;
       setState(() {
         image = File(picked.path);
       });
     }
   }
 
+  // =========================
+  // ENVIAR REPORTE
+  // =========================
+
   Future<void> _sendData() async {
+    // VALIDAR UBICACION
+
     if (position == null) {
       _showCustomSnackBar(
         "Esperando ubicación GPS...",
-
         backgroundColor: Colors.orange,
       );
 
       return;
     }
 
-    if (!mounted) return;
+    // VALIDAR DESCRIPCION
 
-    setState(() => isSending = true);
+    if (_descController.text.trim().isEmpty) {
+      _showCustomSnackBar(
+        "Debes escribir una descripción",
+        backgroundColor: Colors.red,
+      );
+
+      return;
+    }
+
+    // VALIDAR FOTO
+
+    if (image == null) {
+      _showCustomSnackBar(
+        "Debes tomar una fotografía",
+        backgroundColor: Colors.red,
+      );
+
+      return;
+    }
+
+    setState(() {
+      isSending = true;
+    });
 
     try {
       await ApiService.crearIncidente(
-        titulo: categoria,
+        titulo: widget.categoria,
 
-        descripcion: _descController.text,
+        descripcion: _descController.text.trim(),
 
-        categoria: categoria.toLowerCase(),
+        categoria: widget.categoria.toLowerCase(),
 
         latitud: position!.latitude,
 
         longitud: position!.longitude,
+
+        imageFile: image!,
       );
 
       if (!mounted) return;
 
       _showCustomSnackBar(
         "Reporte enviado correctamente",
-
         backgroundColor: Colors.green,
       );
 
       Navigator.pop(context);
     } catch (e) {
-      if (!mounted) return;
-
       _showCustomSnackBar(
         "Error al enviar reporte",
-
         backgroundColor: Colors.red,
       );
-    } finally {
-      if (mounted) {
-        setState(() => isSending = false);
-      }
     }
+
+    setState(() {
+      isSending = false;
+    });
   }
+
+  // =========================
+  // SNACKBAR BONITO
+  // =========================
+
+  void _showCustomSnackBar(String message, {required Color backgroundColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+
+        backgroundColor: backgroundColor,
+
+        behavior: SnackBarBehavior.floating,
+
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  // =========================
+  // UI
+  // =========================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightBg,
+      backgroundColor: const Color(0xFFF7F2FF),
+
       appBar: AppBar(
-        title: const Text(
-          "Nuevo Reporte",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        backgroundColor: primaryPurple,
+        backgroundColor: Colors.deepPurple,
+
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+
+        title: Text(
+          "Nuevo reporte",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
+            // TITULO
             Text(
-              "Detalles del incidente",
-              style: TextStyle(
-                fontSize: 20,
+              widget.categoria,
+
+              style: GoogleFonts.poppins(
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: darkText,
+                color: Colors.deepPurple,
               ),
             ),
-            const SizedBox(height: 20),
 
-            // Card de Ubicación
+            const SizedBox(height: 10),
+
+            Text(
+              "Describe la situación y agrega evidencia fotográfica.",
+
+              style: GoogleFonts.montserrat(
+                fontSize: 15,
+                color: Colors.black54,
+                height: 1.5,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // DESCRIPCION
+            TextField(
+              controller: _descController,
+
+              maxLines: 5,
+
+              style: GoogleFonts.poppins(),
+
+              decoration: InputDecoration(
+                hintText: "Describe lo sucedido...",
+
+                hintStyle: GoogleFonts.poppins(),
+
+                filled: true,
+
+                fillColor: Colors.white,
+
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+
+                  borderSide: BorderSide.none,
+                ),
+
+                contentPadding: const EdgeInsets.all(20),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // FOTO
+            GestureDetector(
+              onTap: pickImage,
+
+              child: Container(
+                width: double.infinity,
+
+                height: 220,
+
+                decoration: BoxDecoration(
+                  color: Colors.white,
+
+                  borderRadius: BorderRadius.circular(25),
+
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+
+                      blurRadius: 10,
+
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+
+                child: image == null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+
+                        children: [
+                          Icon(
+                            Icons.camera_alt,
+                            size: 60,
+                            color: Colors.deepPurple,
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          Text(
+                            "Tomar fotografía",
+
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+
+                              fontWeight: FontWeight.w600,
+
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                        ],
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+
+                        child: Image.file(image!, fit: BoxFit.cover),
+                      ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // UBICACION
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
+
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                  ),
-                ],
+
+                borderRadius: BorderRadius.circular(20),
+
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
               ),
+
               child: Row(
                 children: [
-                  Icon(Icons.location_on, color: primaryPurple),
+                  const Icon(Icons.location_on, color: Colors.deepPurple),
+
                   const SizedBox(width: 12),
+
                   Expanded(
                     child: Text(
                       position == null
-                          ? "Obteniendo coordenadas..."
-                          : "Ubicación detectada",
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                          ? "Obteniendo ubicación..."
+                          : "Ubicación obtenida correctamente",
+
+                      style: GoogleFonts.montserrat(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 25),
-
-            // Selector de Categoría
-            DropdownButtonFormField<String>(
-              value: categoria,
-              decoration: InputDecoration(
-                labelText: "Categoría",
-                filled: true,
-                fillColor: Colors.white,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Color(0xFFE9D5FF)),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              items: [
-                "Acoso",
-                "Robo",
-                "Violencia Física",
-                "Seguimiento",
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-              onChanged: (value) => setState(() => categoria = value!),
-            ),
-
-            const SizedBox(height: 25),
-
-            // 🔥 NUEVO: Campo de Descripción (Debajo de categoría)
-            TextField(
-              controller: _descController,
-              maxLines: 3, // Permite escribir varios reglones
-              decoration: InputDecoration(
-                labelText: "Descripción",
-                hintText: "Escribe detalles de lo sucedido...",
-                filled: true,
-                fillColor: Colors.white,
-                alignLabelWithHint: true, // Mantiene el label arriba
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Color(0xFFE9D5FF)),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Área de Fotografía
-            const Text(
-              "Evidencia visual (opcional)",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: _takePhoto,
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
-                ),
-                child: image != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Image.file(image!, fit: BoxFit.cover),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_a_photo_rounded,
-                            size: 50,
-                            color: primaryPurple.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text("Presiona para tomar foto"),
-                        ],
-                      ),
-              ),
-            ),
-
             const SizedBox(height: 40),
 
-            // Botón de Envío
+            // BOTON
             SizedBox(
               width: double.infinity,
-              height: 60,
+
+              height: 58,
+
               child: ElevatedButton(
+                onPressed: isSending ? null : _sendData,
+
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryPurple,
-                  foregroundColor: Colors.white,
-                  elevation: 5,
+                  backgroundColor: Colors.deepPurple,
+
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-                onPressed: isSending ? null : _sendData,
+
                 child: isSending
-                    ? SpinKitThreeBounce(color: Colors.white, size: 22)
-                    : const Text(
-                        "ENVIAR REPORTE SEGURO",
-                        style: TextStyle(
-                          fontSize: 16,
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        "Enviar reporte",
+
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+
                           fontWeight: FontWeight.bold,
                         ),
                       ),

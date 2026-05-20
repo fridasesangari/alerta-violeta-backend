@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static const String baseUrl = "https://alerta-violeta-backend.onrender.com";
+
+  static final supabase = Supabase.instance.client;
 
   // =========================
   // OBTENER REPORTES
@@ -25,32 +29,44 @@ class ApiService {
 
   static Future<void> crearIncidente({
     required String titulo,
-
     required String descripcion,
-
     required String categoria,
-
     required double latitud,
-
     required double longitud,
+    required File imageFile,
   }) async {
+    // =========================
+    // SUBIR IMAGEN A SUPABASE
+    // =========================
+
+    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+    final imageBytes = await imageFile.readAsBytes();
+
+    await supabase.storage.from("reportes").uploadBinary(fileName, imageBytes);
+
+    // =========================
+    // OBTENER URL PUBLICA
+    // =========================
+
+    final imageUrl = supabase.storage.from("reportes").getPublicUrl(fileName);
+
+    // =========================
+    // ENVIAR AL BACKEND
+    // =========================
+
     final url = Uri.parse("$baseUrl/incidentes");
 
     final response = await http.post(
       url,
-
       headers: {'Content-Type': 'application/json'},
-
       body: jsonEncode({
         'titulo': titulo,
-
         'descripcion': descripcion,
-
         'categoria': categoria,
-
         'latitud': latitud,
-
         'longitud': longitud,
+        'imagen': imageUrl,
       }),
     );
 
@@ -68,9 +84,7 @@ class ApiService {
 
     await http.put(
       url,
-
       headers: {'Content-Type': 'application/json'},
-
       body: jsonEncode({'estado': estado}),
     );
   }
