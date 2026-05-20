@@ -39,6 +39,12 @@ class _ReportScreenState extends State<ReportScreen> {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
+      if (mounted) {
+        _showCustomSnackBar(
+          "Activa el GPS de tu dispositivo para continuar",
+          backgroundColor: Colors.orange,
+        );
+      }
       return;
     }
 
@@ -48,11 +54,29 @@ class _ReportScreenState extends State<ReportScreen> {
       permission = await Geolocator.requestPermission();
     }
 
-    final currentPosition = await Geolocator.getCurrentPosition();
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        _showCustomSnackBar(
+          "Permiso de ubicación denegado. Actívalo en Ajustes > Aplicaciones.",
+          backgroundColor: Colors.red,
+        );
+      }
+      return;
+    }
 
-    setState(() {
-      position = currentPosition;
-    });
+    try {
+      final currentPosition = await Geolocator.getCurrentPosition();
+      setState(() {
+        position = currentPosition;
+      });
+    } catch (e) {
+      if (mounted) {
+        _showCustomSnackBar(
+          "No se pudo obtener la ubicación. Intenta de nuevo.",
+          backgroundColor: Colors.orange,
+        );
+      }
+    }
   }
 
   // =========================
@@ -120,7 +144,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
         descripcion: _descController.text.trim(),
 
-        categoria: widget.categoria.toLowerCase(),
+        categoria: widget.categoria,
 
         latitud: position!.latitude,
 

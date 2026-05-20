@@ -37,19 +37,25 @@ class ApiService {
   }) async {
     // =========================
     // SUBIR IMAGEN A SUPABASE
+    // (si falla, el reporte se envía igual sin imagen)
     // =========================
 
-    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+    String? imageUrl;
 
-    final imageBytes = await imageFile.readAsBytes();
+    try {
+      final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
 
-    await supabase.storage.from("reportes").uploadBinary(fileName, imageBytes);
+      final imageBytes = await imageFile.readAsBytes();
 
-    // =========================
-    // OBTENER URL PUBLICA
-    // =========================
+      await supabase.storage
+          .from("reportes")
+          .uploadBinary(fileName, imageBytes);
 
-    final imageUrl = supabase.storage.from("reportes").getPublicUrl(fileName);
+      imageUrl =
+          supabase.storage.from("reportes").getPublicUrl(fileName);
+    } catch (_) {
+      // El reporte continúa aunque la imagen no se pueda subir
+    }
 
     // =========================
     // ENVIAR AL BACKEND

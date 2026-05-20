@@ -24,22 +24,13 @@ class _MapScreenState extends State<MapScreen> {
 
   // 🔥 COLOR SEGÚN CATEGORÍA
   Color getColor(String categoria) {
-    switch (categoria) {
-      case "Robo":
-        return Colors.orange;
+    final c = categoria.toLowerCase();
 
-      case "Violencia Física":
-        return Colors.red;
+    if (c.contains('violencia')) return Colors.red;
+    if (c.contains('seguimiento')) return Colors.purple;
+    if (c.contains('acoso')) return Colors.blue;
 
-      case "Seguimiento":
-        return Colors.purple;
-
-      case "Acoso":
-        return Colors.blue;
-
-      default:
-        return Colors.grey;
-    }
+    return Colors.grey;
   }
 
   //CARGAR REPORTES
